@@ -41,7 +41,7 @@ def _sdft_kernel(input_data, N, fps_animation, sample_rate):
     animation_list = np.zeros((int(input_size / idle_samples), N), dtype=np.complex128)
     total_frames = int(input_size / idle_samples)
     
-    r = 0.999   # r<1 helps to have a convergence solution
+    r = 1       # r<1 useful in case of divergence
     k_vec = np.arange(N)
     arg = 2 * np.pi * k_vec / N
     twiddles = r * (np.cos(arg) - 1j * np.sin(arg))
@@ -57,8 +57,8 @@ def _sdft_kernel(input_data, N, fps_animation, sample_rate):
 
         Z = (err + Z) * twiddles
 
-        # prev_out = np.real(np.sum(Z)) / N
-        prev_out = np.real(Z[0]) / N
+        prev_out = np.real(np.sum(Z)) / N
+        # prev_out = np.real(Z[0]) / N      # needs the convergence factor r<1
         output[index] = prev_out
 
         if (index + 1) % idle_samples == 0 and anim_index < total_frames:
