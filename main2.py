@@ -14,6 +14,8 @@ import matplotlib.animation as animation
 #   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚══════╝
                                                                     
 sample_rate, data = wavfile.read("test3_notes.wav")
+RESONATOR_BRANCH = True
+MODULATOR_BRANCH = False
 
 # uncomment for test
 # sample_rate = 44100
@@ -40,11 +42,14 @@ def _sdft_kernel(input_data, N, fps_animation, sample_rate):
     idle_samples = sample_rate // fps_animation
     animation_list = np.zeros((int(input_size / idle_samples), N), dtype=np.complex128)
     total_frames = int(input_size / idle_samples)
-    
+
     r = 1       # r<1 useful in case of divergence
     k_vec = np.arange(N)
     arg = 2 * np.pi * k_vec / N
-    twiddles = r * (np.cos(arg) - 1j * np.sin(arg))
+    if RESONATOR_BRANCH:
+        twiddles = r * (np.cos(arg) - 1j * np.sin(arg))
+    elif MODULATOR_BRANCH:
+        r = 0.999
 
     output = np.zeros(input_size, dtype=np.float64)
     Z = np.zeros(N, dtype=np.complex128)
@@ -55,11 +60,20 @@ def _sdft_kernel(input_data, N, fps_animation, sample_rate):
     for index in range(input_size):
         err = input_data[index] - prev_out
 
-        Z = (err + Z) * twiddles
+        if RESONATOR_BRANCH:
+            Z = (err + Z) * twiddles
 
-        prev_out = np.real(np.sum(Z)) / N
-        # prev_out = np.real(Z[0]) / N      # needs the convergence factor r<1
-        output[index] = prev_out
+            prev_out = np.real(np.sum(Z)) / N
+            # prev_out = np.real(Z[0]) / N      # faster but needs the convergence factor r<1
+            output[index] = prev_out
+        
+        elif MODULATOR_BRANCH:
+            twiddle = np.exp(1j * arg * index)#(np.cos(arg * index) + 1j * np.sin(arg * index))
+
+            prev_out = np.sum(np.real(Z * np.conjugate(twiddle))) / N
+            output[index] = prev_out
+
+            Z = r * Z + err * twiddle
 
         if (index + 1) % idle_samples == 0 and anim_index < total_frames:
             animation_list[anim_index] = Z.copy()    # last column
@@ -96,6 +110,7 @@ print(f"Sample rate input file: {sample_rate} (Hz)")
 print(f"Input data file duration: {audio_seconds} (s)")
 print(f"Input data file num. samples: {data.size}")
 print(f"Spectrum calculation started")
+
 
 output, Xkn, spectr_fps = _sdft_kernel(data, window_size, fps_animation, sample_rate)
 
