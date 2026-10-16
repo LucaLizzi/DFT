@@ -1,6 +1,6 @@
 from numba import jit
 import numpy as np
-
+from matplotlib import pyplot as plt
 
 # @jit(nopython=True, fastmath=True)
 def _sdft_kernel(input_data:None, N:10, fps_animation:int=30, sample_rate:int=1, params:tuple=(False, False, False, False), animation:bool=False):
@@ -14,6 +14,7 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30, sample_rate:int=1,
             spectr_fft_dB = 20 * np.log10(out_fft + 1e-12)   #1e-12 needed to avoid inf values
 
         if r_sdft or m_sdft or dc_sdft:
+            input_data = input_data[:N]
             input_size = input_data.size
 
             # number of samples to wait before save the spectrum (for animation)
@@ -89,3 +90,51 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30, sample_rate:int=1,
         # return spectr_rsdft_dB, spectr_msdft_dB, spectr_rsdft_DC_dB, spectr_fft_dB
     else:
         raise Exception("No data")
+
+
+
+def plt_func(wave_name, rsdft, err_rsdft, 
+    rsdft_dc, err_rsdft_dc, 
+    msdft, err_msdft, 
+    fft, x):
+
+    fig, ax = plt.subplots(3, 3, figsize=(12, 10))
+    axes_flat = ax.flatten()
+
+    ax[0,0].plot(x, rsdft, color='gray', alpha=0.6)
+    ax[0,0].set_title("rsdft")
+    ax[0,0].set_xlabel("Frequency Hz")
+
+    ax[1,0].plot(x, err_rsdft, color='gray', alpha=0.6)
+    ax[1,0].set_title("err rsdft")
+    ax[1,0].set_xlabel("Frequency Hz")
+
+    ax[0,1].plot(x, rsdft_dc, color='gray', alpha=0.6)
+    ax[0,1].set_title("rsdft_dc")
+    ax[0,1].set_xlabel("Frequency Hz")
+
+    ax[1,1].plot(x, err_rsdft_dc, color='gray', alpha=0.6)
+    ax[1,1].set_title("err rsdft_dc")
+    ax[1,1].set_xlabel("Frequency Hz")
+
+    ax[0,2].plot(x, msdft, color='gray', alpha=0.6)
+    ax[0,2].set_title("msdft")
+    ax[0,2].set_xlabel("Frequency Hz")
+
+    ax[1,2].plot(x, err_msdft, color='gray', alpha=0.6)
+    ax[1,2].set_title("err msdft")
+    ax[1,2].set_xlabel("Frequency Hz")
+
+    ax[2,1].plot(x, fft, color='gray', alpha=0.6)
+    ax[2,1].set_title("fft")
+    ax[2,1].set_xlabel("Frequency Hz")
+
+    ax[2, 0].axis("off")
+    ax[2, 2].axis("off")
+
+    fig.suptitle(f"wave name: {wave_name}")
+    fig.tight_layout()
+
+    plt.savefig(f"./images/{wave_name}.png", dpi=300, bbox_inches='tight')
+
+    plt.close()

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from numba import jit
 import matplotlib.animation as animation
-from functions import _sdft_kernel
+from functions import _sdft_kernel, plt_func
 import time
 import csv
 
@@ -26,6 +26,9 @@ OSDFT_DC = True# DC components
 DFT_FFT = True # FFT algorithm as ideality
 params = (OSDFT_R, OSDFT_DC, OSDFT_M, DFT_FFT)
 
+window_size = 4096
+fps_animation = 30
+
 # uncomment for test
 fs = int(40e3)  #Hz
 # n = np.linspace(0, 1, fs)
@@ -36,9 +39,9 @@ d = 0.25    # frequency sliding factor
 fy  =   {"on_bin"  :   [k  for k in ky],
         "off_bin"   :   [(k-d)  for k in ky]}    #Hz
 
-min_f = min(min(fy["on_bin"]), min(fy["off_bin"]))
-min_periods = 1
-T = min_periods / min_f
+# min_f = min(min(fy["on_bin"]), min(fy["off_bin"]))
+# min_periods = 1
+T = 10  #min_periods / min_f
 n = np.linspace(0, T, int(fs * T))
 
 s_xy = {}   # test dict, 200 waves
@@ -47,8 +50,6 @@ for a in Ax:
         for f in f_y:
             s_xy[f"test_{a}_{f}Hz_{bin}"] = a * np.sin(2 * np.pi * f * n)
 
-window_size = 4096
-fps_animation = 30
 
 
 # ███████╗██████╗ ███████╗ ██████╗████████╗██████╗ ██╗   ██╗███╗   ███╗     █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
@@ -88,6 +89,8 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
         err_rsdft = np.sqrt((spectr_rsdft - spectr_fft)**2) / denum
         err_rsdft_dc = np.sqrt((spectr_rsdft_dc - spectr_fft)**2) / denum
         err_msdft = np.sqrt((spectr_msdft - spectr_fft)**2) / denum
+
+        plt_func(wave_name, spectr_rsdft, err_rsdft, spectr_rsdft_dc, err_rsdft_dc, spectr_msdft, err_msdft, spectr_fft, range(half_N))
 
         err_rsdft_tot += err_rsdft
         err_rsdft_dc_tot += err_rsdft_dc
