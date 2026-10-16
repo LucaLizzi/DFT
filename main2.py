@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from numba import jit
 import matplotlib.animation as animation
-from functions import _sdft_kernel, plt_func
+from functions import _sdft_kernel, plt_func, quantizer
 import time
 import csv
 
@@ -28,12 +28,14 @@ params = (OSDFT_R, OSDFT_DC, OSDFT_M, DFT_FFT)
 
 window_size = 4096
 fps_animation = 30
+num_bits = 64
+max_amplitude = 100
 
 # uncomment for test
-fs = int(40e3)  #Hz
+fs = int(100e3)  #Hz
 # n = np.linspace(0, 1, fs)
 # N = len(n)  # number of samples
-Ax = np.linspace(10, 100, 10)
+Ax = np.linspace(10/max_amplitude, 1, 10)       # normalized signal amplitudes
 ky = np.linspace(1, 15000, 15)
 d = 0.25    # frequency sliding factor
 fy  =   {"on_bin"  :   [k  for k in ky],
@@ -48,7 +50,8 @@ s_xy = {}   # test dict, 200 waves
 for a in Ax:    
     for bin, f_y in fy.items():
         for f in f_y:
-            s_xy[f"test_{a}_{f}Hz_{bin}"] = a * np.sin(2 * np.pi * f * n)
+            x = a * np.sin(2 * np.pi * f * n)
+            s_xy[f"test_{a}_{round(f, 5)}Hz_{bin}_{num_bits}bits"] = quantizer(x, num_bits=num_bits)
 
 
 
@@ -90,12 +93,18 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
         err_rsdft_dc = np.sqrt((spectr_rsdft_dc - spectr_fft)**2) / denum
         err_msdft = np.sqrt((spectr_msdft - spectr_fft)**2) / denum
 
-        plt_func(wave_name, spectr_rsdft, err_rsdft, spectr_rsdft_dc, err_rsdft_dc, spectr_msdft, err_msdft, spectr_fft, range(half_N))
+        # save plot spectrums and wave data
+        plt_func(wave_name, wave_data, num_bits, max_amplitude,
+            spectr_rsdft, err_rsdft, 
+            spectr_rsdft_dc, err_rsdft_dc, 
+            spectr_msdft, err_msdft, 
+            spectr_fft, range(half_N), fs/2)
 
         err_rsdft_tot += err_rsdft
         err_rsdft_dc_tot += err_rsdft_dc
         err_msdft_tot += err_msdft
 
+        # write reusults to csv
         writer.writerow([wave_name, 
             round(np.mean(err_rsdft), 2), 
             round(np.mean(err_rsdft_dc), 2), 
