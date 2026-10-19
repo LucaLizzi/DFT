@@ -29,7 +29,7 @@ params = (OSDFT_R, RSDFT_DC, OSDFT_M, MSDFT_DC, DFT_FFT)
 
 window_size = 4096
 fps_animation = 30
-num_bits = 64
+num_bits_list = [64, 24, 16, 12, 8, 4, 2]
 quantizer_enabler = [True]#, False]
 max_amplitude = 100
 
@@ -50,14 +50,6 @@ fy  =   {"on_bin"  :   [k  for k in ky],
 T = 10  #min_periods / min_f
 n = np.linspace(0, T, int(fs * T))
 
-s_xy = {}   # test dict, 200 waves
-for a in Ax:    
-    for bin_, f_y in fy.items():
-        for f in f_y:
-            x = a * np.sin(2 * np.pi * f * n)
-            s_xy[f"test_{round(a, 2)}_{round(f, 5)}Hz_{bin_}_{num_bits}bits"] = quantizer(x, num_bits=num_bits)
-
-
 
 # ███████╗██████╗ ███████╗ ██████╗████████╗██████╗ ██╗   ██╗███╗   ███╗     █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
 # ██╔════╝██╔══██╗██╔════╝██╔════╝╚══██╔══╝██╔══██╗██║   ██║████╗ ████║    ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝██╔════╝██║██╔════╝
@@ -67,7 +59,6 @@ for a in Ax:
 # ╚══════╝╚═╝     ╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝    ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝   ╚══════╝╚═╝╚══════╝
                                                                                                                                             
 # test 200 waves
-print("Test started for all waves")
 beginning = time.time()
 
 half_N = window_size // 2
@@ -82,58 +73,70 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
     writer.writerow(["wave name", "err rsdft", "err rsdft_dc", "err msdft", "err msdft_dc"])
 
     for quant_en in quantizer_enabler:
-        for wave_name, wave_data in s_xy.items():
-            start_time = time.time()
+        for num_bits in num_bits_list:
+            
+            print(f"Building waves ...")
+            s_xy = {}   # test dict, 200 waves
+            for a in Ax:    
+                for bin_, f_y in fy.items():
+                    for f in f_y:
+                        x = a * np.sin(2 * np.pi * f * n)
+                        s_xy[f"test_{round(a, 2)}_{round(f, 5)}Hz_{bin_}_{num_bits}bits"] = quantizer(x, num_bits=num_bits)
+            
+            print("Test started for all waves")
 
-            spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft = _sdft_kernel(input_data=wave_data, 
-                N=window_size, fps_animation=fps_animation, sample_rate=fs, params=params, 
-                quant_en=quant_en, num_bits=num_bits, max_amplitude=max_amplitude)
+            for wave_name, wave_data in s_xy.items():
+                start_time = time.time()
 
-            # consider only the first half of the spectrum
-            spectr_rsdft = np.abs(spectr_rsdft[:half_N])
-            spectr_rsdft_dc = np.abs(spectr_rsdft_dc[:half_N])
-            spectr_msdft = np.abs(spectr_msdft[:half_N])
-            spectr_msdft_dc = np.abs(spectr_msdft_dc[:half_N])
-            spectr_fft = np.abs(spectr_fft[:half_N])
+                spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft = _sdft_kernel(input_data=wave_data, 
+                    N=window_size, fps_animation=fps_animation, sample_rate=fs, params=params, 
+                    quant_en=quant_en, num_bits=num_bits, max_amplitude=max_amplitude)
 
-            # error calculation
-            denum = np.sqrt(spectr_fft**2)
-            err_rsdft = np.sqrt((spectr_rsdft - spectr_fft)**2) / denum
-            err_rsdft_dc = np.sqrt((spectr_rsdft_dc - spectr_fft)**2) / denum
-            err_msdft = np.sqrt((spectr_msdft - spectr_fft)**2) / denum
-            err_msdft_dc = np.sqrt((spectr_msdft_dc - spectr_fft)**2) / denum
-            mean_err_rsdft = round(np.mean(err_rsdft), 2)
-            mean_err_rsdft_dc = round(np.mean(err_rsdft_dc), 2)
-            mean_err_msdft = round(np.mean(err_msdft), 2)
-            mean_err_msdft_dc = round(np.mean(err_msdft_dc), 2)
+                # consider only the first half of the spectrum
+                spectr_rsdft = np.abs(spectr_rsdft[:half_N])
+                spectr_rsdft_dc = np.abs(spectr_rsdft_dc[:half_N])
+                spectr_msdft = np.abs(spectr_msdft[:half_N])
+                spectr_msdft_dc = np.abs(spectr_msdft_dc[:half_N])
+                spectr_fft = np.abs(spectr_fft[:half_N])
 
-            # save plot spectrums and wave data
-            plt_func(wave_name, wave_data, num_bits, max_amplitude,
-                spectr_rsdft, err_rsdft, 
-                spectr_rsdft_dc, err_rsdft_dc, 
-                spectr_msdft, err_msdft, 
-                spectr_msdft_dc, err_msdft_dc,
-                spectr_fft, range(half_N), fs/2,
-                mean_err_rsdft, mean_err_rsdft_dc, mean_err_msdft, mean_err_msdft_dc)
+                # error calculation
+                denum = np.sqrt(spectr_fft**2)
+                err_rsdft = np.sqrt((spectr_rsdft - spectr_fft)**2) / denum
+                err_rsdft_dc = np.sqrt((spectr_rsdft_dc - spectr_fft)**2) / denum
+                err_msdft = np.sqrt((spectr_msdft - spectr_fft)**2) / denum
+                err_msdft_dc = np.sqrt((spectr_msdft_dc - spectr_fft)**2) / denum
+                mean_err_rsdft = round(np.mean(err_rsdft), 2)
+                mean_err_rsdft_dc = round(np.mean(err_rsdft_dc), 2)
+                mean_err_msdft = round(np.mean(err_msdft), 2)
+                mean_err_msdft_dc = round(np.mean(err_msdft_dc), 2)
 
-            err_rsdft_tot += err_rsdft
-            err_rsdft_dc_tot += err_rsdft_dc
-            err_msdft_tot += err_msdft
-            err_msdft_dc_tot += err_msdft_dc
+                # save plot spectrums and wave data
+                plt_func(f"{"quant" if quant_en else "no_quant"}_{wave_name}", wave_data, num_bits, max_amplitude,
+                    spectr_rsdft, err_rsdft, 
+                    spectr_rsdft_dc, err_rsdft_dc, 
+                    spectr_msdft, err_msdft, 
+                    spectr_msdft_dc, err_msdft_dc,
+                    spectr_fft, range(half_N), fs/2,
+                    mean_err_rsdft, mean_err_rsdft_dc, mean_err_msdft, mean_err_msdft_dc)
 
-            # write reusults to csv
-            writer.writerow([wave_name, 
-                mean_err_rsdft, 
-                mean_err_rsdft_dc, 
-                mean_err_msdft, 
-                mean_err_msdft_dc])
+                err_rsdft_tot += err_rsdft
+                err_rsdft_dc_tot += err_rsdft_dc
+                err_msdft_tot += err_msdft
+                err_msdft_dc_tot += err_msdft_dc
 
-            print(f"Test finished: {wave_name}. \
-                Errors rsdft: {mean_err_rsdft}, \
-                rsdft_dc: {mean_err_rsdft_dc}, \
-                msdft: {mean_err_msdft}, \
-                msdft_dc: {mean_err_msdft_dc}. \
-                Execution time: {time.time() - start_time:.2f} seconds")
+                # write reusults to csv
+                writer.writerow([wave_name, 
+                    mean_err_rsdft, 
+                    mean_err_rsdft_dc, 
+                    mean_err_msdft, 
+                    mean_err_msdft_dc])
+
+                print(f"Test finished: {wave_name}. \
+                    Errors rsdft: {mean_err_rsdft}, \
+                    rsdft_dc: {mean_err_rsdft_dc}, \
+                    msdft: {mean_err_msdft}, \
+                    msdft_dc: {mean_err_msdft_dc}. \
+                    Execution time: {time.time() - start_time:.2f} seconds")
 
 err_rsdft_avg = err_rsdft_tot / len(s_xy)
 err_rsdft_dc_avg = err_rsdft_dc_tot / len(s_xy)

@@ -229,8 +229,10 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
     ax[2,2].set_title("Average errors", fontsize=12, fontweight='bold', pad=10)
 
     ax[2,3].axis("off")
-
-    fig.suptitle(f"wave name: {wave_name}, num_bits: {num_bits}, max_amplitude: {max_amplitude}")#, fontsize=14)
+    if "quant" in wave_name:
+        fig.suptitle(f"wave name: {wave_name}, num_bits: {num_bits}")#, fontsize=14)
+    if "no_quant" in wave_name:
+        fig.suptitle(f"wave name: {wave_name}")#, fontsize=14)
     fig.tight_layout()
 
     plt.savefig(f"./images/{wave_name}.png", dpi=300, bbox_inches='tight')
@@ -239,7 +241,8 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
 
 
 def quantizer(signal, num_bits:int=8, max_amplitude:float=1.0):
-    normalized_signal = signal / max_amplitude
+    if num_bits == "no quant":
+        raise Exception("Quantization is disabled. Please provide a valid number of bits.")
 
     def q(s):
         half_levels = 2 ** (num_bits - 1)
