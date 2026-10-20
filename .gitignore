@@ -1,2 +1,6 @@
 main.ipynb
 main2.ipynb
+__pycache__
+images_old
+.venv
+images.zip
