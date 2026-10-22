@@ -141,15 +141,11 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
 
 
 def plt_func(wave_name, wave_data, num_bits, max_amplitude, 
-    rsdft, err_rsdft, 
-    rsdft_dc, err_rsdft_dc, 
-    msdft, err_msdft, 
-    msdft_dc, err_msdft_dc,
-    fft, horiz, max_freq):
+    rsdft, rsdft_dc, msdft, msdft_dc, fft, horiz, max_freq):
 
     x = np.linspace(0, max_freq/1000, len(horiz))
 
-    fig, ax = plt.subplots(3, 4, figsize=(12, 10))
+    fig, ax = plt.subplots(2, 3, figsize=(18, 15))
     axes_flat = ax.flatten()
 
     ax[0,0].plot(x, rsdft, color='gray', alpha=0.6)
@@ -157,45 +153,25 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
     ax[0,0].set_xlabel("Frequency (kHz)")
     ax[0,0].set_xscale('log')
 
-    # ax[1,0].plot(x, err_rsdft, color='gray', alpha=0.6)
-    # ax[1,0].set_title("err rsdft")
-    # ax[1,0].set_xlabel("Frequency (kHz)")
-    # ax[1,0].set_xscale('log')
-
     ax[0,1].plot(x, rsdft_dc, color='gray', alpha=0.6)
     ax[0,1].set_title("rsdft_dc")
     ax[0,1].set_xlabel("Frequency (kHz)")
     ax[0,1].set_xscale('log')
-
-    # ax[1,1].plot(x, err_rsdft_dc, color='gray', alpha=0.6)
-    # ax[1,1].set_title("err rsdft_dc")
-    # ax[1,1].set_xlabel("Frequency (kHz)")
-    # ax[1,1].set_xscale('log')
 
     ax[0,2].plot(x, msdft, color='gray', alpha=0.6)
     ax[0,2].set_title("msdft")
     ax[0,2].set_xlabel("Frequency (kHz)")
     ax[0,2].set_xscale('log')
 
-    # ax[1,2].plot(x, err_msdft, color='gray', alpha=0.6)
-    # ax[1,2].set_title("err msdft")
-    # ax[1,2].set_xlabel("Frequency (kHz)")
-    # ax[1,2].set_xscale('log')
+    ax[1,1].plot(x, fft, color='gray', alpha=0.6)
+    ax[1,1].set_title("fft")
+    ax[1,1].set_xlabel("Frequency (kHz)")
+    ax[1,1].set_xscale('log')
 
-    ax[2,1].plot(x, fft, color='gray', alpha=0.6)
-    ax[2,1].set_title("fft")
-    ax[2,1].set_xlabel("Frequency (kHz)")
-    ax[2,1].set_xscale('log')
-
-    ax[0,3].plot(x, msdft_dc, color='gray', alpha=0.6)
-    ax[0,3].set_title("msdft_dc")
-    ax[0,3].set_xlabel("Frequency (kHz)")
-    ax[0,3].set_xscale('log')
-
-    # ax[1,3].plot(x, err_msdft_dc, color='gray', alpha=0.6)
-    # ax[1,3].set_title("err msdft_dc")
-    # ax[1,3].set_xlabel("Frequency (kHz)")
-    # ax[1,3].set_xscale('log')
+    ax[1,2].plot(x, msdft_dc, color='gray', alpha=0.6)
+    ax[1,2].set_title("msdft_dc")
+    ax[1,2].set_xlabel("Frequency (kHz)")
+    ax[1,2].set_xscale('log')
 
     signal = wave_data - np.mean(wave_data)
     zero_crossings = np.where((signal[:-1] <= 0) & (signal[1:] > 0))[0]
@@ -204,31 +180,12 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
     else:
         period_samples = len(wave_data)
     num_periods_to_show = 1
-    ax[2,0].plot(range(len(wave_data)), wave_data, color='gray', alpha=0.6)
-    ax[2,0].set_title(f"wave data ({num_periods_to_show} periods)")
-    ax[2, 0].set_xlim(0, period_samples * num_periods_to_show)
-    ax[2,0].set_ylabel("Amplitude")
-    ax[2,0].set_xlabel(f"Time (periods: {num_periods_to_show})")
+    ax[1,0].plot(range(len(wave_data)), wave_data, color='gray', alpha=0.6)
+    ax[1,0].set_title(f"wave data ({num_periods_to_show} periods)")
+    ax[1,0].set_xlim(0, period_samples * num_periods_to_show)
+    ax[1,0].set_ylabel("Amplitude")
+    ax[1,0].set_xlabel(f"Time (periods: {num_periods_to_show})")
 
-    ax[2,2].axis("off")
-    table_data = [
-        ["rsdft", err_rsdft],
-        ["rsdft_dc", err_rsdft_dc],
-        ["msdft", err_msdft],
-        ["msdft_dc", err_msdft_dc]
-        ]
-    table = ax[2,2].table(
-            cellText=table_data,
-            colLabels=["Parameter", "Value"],
-            loc="center",
-            cellLoc="center"
-        )
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1.2, 1.5)
-    ax[2,2].set_title("Average errors", fontsize=12, fontweight='bold', pad=10)
-
-    ax[2,3].axis("off")
     if "quant" in wave_name:
         fig.suptitle(f"wave name: {wave_name}, num_bits: {num_bits}")#, fontsize=14)
     if "no_quant" in wave_name:
