@@ -32,8 +32,8 @@ params = (OSDFT_R, RSDFT_DC, OSDFT_M, MSDFT_DC, DFT_FFT)
 
 window_size = 4096
 fps_animation = 30
-num_bits_list = [24, 8]
-quantizer_enabler = [True]#, False]
+num_bits_list = [64, 32, 16, 8]
+quantizer_enabler = [False, True]
 max_amplitude = 100
 f_max = 15000
 fs = int(40e3)  #Hz
@@ -41,12 +41,12 @@ delta_f = fs / window_size
 
 min_k = 1
 max_k = min(window_size // 2 - 1, int(f_max / delta_f))     # ignore Nyquist and DC bins  
-ky = np.linspace(min_k, max_k, 3)
+ky = np.unique(np.linspace(min_k, max_k, 10, dtype=int))
 d = 0.25    # frequency sliding factor
 fy  =   {"on_bin"  :   [k * delta_f  for k in ky],
         f"off_bin({d})"   :   [(k-d) * delta_f  for k in ky]}   #Hz
 
-Ax = np.linspace(10/max_amplitude, 1, 3)       # normalized signal amplitudes
+Ax = np.linspace(10/max_amplitude, 1, 10)       # normalized signal amplitudes
 
 n = np.arange(window_size)/fs
 
@@ -68,11 +68,19 @@ err_msdft_tot = np.zeros(half_N)
 err_msdft_dc_tot = np.zeros(half_N)
 
 results = []
-# bin = [<bit number>, <amplitude>, <frequency index>, <onbin/offbin>]
-selected_plots = [(24, 0.1, 2, 0), 
-                (24, 1.0, 2, 0), 
-                (24, 0.1, 2, d),
-                (24, 1.0, 2, d)]
+# bin = [<bit number>, <amplitude index>, <frequency index>, <onbin/offbin>, <quant_en>]
+selected_plots = [(8, 3, 5, 0, False), 
+                (8, 8, 5, 0, False), 
+                (8, 3, 5, d, False),
+                (8, 3, 5, d, False),
+                (8, 8, 5, 0, True), 
+                (8, 8, 5, 0, True), 
+                (8, 3, 5, d, True),
+                (8, 8, 5, d, True),
+                (32, 3, 5, 0, True), 
+                (32, 8, 5, 0, True), 
+                (32, 3, 5, d, True),
+                (32, 8, 5, d, True)]
 
 with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_csv:
     writer = csv.writer(file_csv)
@@ -82,11 +90,17 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
 
     for quant_en in quantizer_enabler:
         for num_bits in num_bits_list:            
-            for a in Ax:    
+            num_bits = num_bits if quant_en else "Ideal (NoQuant)"
+
+            for index_a, a in enumerate(Ax):    
                 for bin_, f_y in fy.items():
-                    for index, f in enumerate(f_y):
-                        wave_data = quantizer(a * np.sin(2 * np.pi * f * n), num_bits=num_bits)
-                        wave_name = f"amp={a}_f={f}Hz_{bin_}_{num_bits}"
+                    for index_f, f in enumerate(f_y):
+                        if quant_en:
+                            wave_data = quantizer(a * np.sin(2 * np.pi * f * n), num_bits=num_bits)
+                            wave_name = f"amp={round(a,2)}_f={round(f,2)}Hz_{bin_}_{num_bits}bits"
+                        else:   
+                            wave_data = a * np.sin(2 * np.pi * f * n)
+                            wave_name = f"amp={a}_f={f}Hz_{bin_}_noQuant"
 
                         start_time = time.time()
 
@@ -122,6 +136,7 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                         err_abs_msdft = np.linalg.norm(spectr_msdft - spectr_fft, ord=2) / denum
                         err_abs_msdft_dc = np.linalg.norm(spectr_msdft_dc - spectr_fft, ord=2) / denum
 
+                        # save results
                         results.append({
                             'Architecture': "rsdft", 'Bits': num_bits, 'Amplitude': a, 'BinType': bin_,
                             'Frequency': f, 'Magnitude error': err_abs_rsdft, "Complex error": err_cpx_rsdft})
@@ -136,7 +151,7 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                             'Frequency': f, 'Magnitude error': err_abs_msdft_dc, "Complex error": err_cpx_msdft_dc})
 
                         # save plot spectrums and wave data
-                        if (num_bits, a, index, 0 if bin_ == "on_bin" else d) in selected_plots:
+                        if (num_bits, index_a, index_f, 0 if bin_ == "on_bin" else d, quant_en) in selected_plots or "ALL" in selected_plots:
                             plt_func(f"{"quant" if quant_en else "no_quant"}_{wave_name}", wave_data, num_bits, max_amplitude,
                                 spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft, range(half_N), fs/2)
 
@@ -153,15 +168,17 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                                 f"  RSDFT_DC  -> magnitude: {round(err_abs_rsdft_dc, 4)}, complex: {round(err_cpx_rsdft_dc, 4)} \n"
                                 f"  MSDFT     -> magnitude: {round(err_abs_msdft, 4)}, complex: {round(err_cpx_msdft, 4)} \n"
                                 f"  MSDFT_DC  -> magnitude: {round(err_abs_msdft_dc, 4)}, complex: {round(err_cpx_msdft_dc, 4)} \n"
-                                f"  Execution time: {time.time() - beginning:.2f} seconds \n" \
+                                f"  Execution time: {time.time() - start_time:.2f} seconds \n" \
                                 f"================================================================================")
+
+            if quant_en == False:    break
 
 
 df_results = pd.DataFrame(results)
 
-bit_err(df_results)
-err_vs_freq(df_results)
-heat_map(df_results)
+bit_err(df_results, fy=fy)
+err_vs_freq(df_results, fy=fy)
+heat_map(df_results, fy=fy)
 
 end_time = time.time()
 print(f"Test finished. Total time: {end_time - beginning:.2f} seconds")

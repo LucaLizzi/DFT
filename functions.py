@@ -12,10 +12,10 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
 
     if input_data.all() != None:
         if fft:
-            fft_res = np.fft.fft(input_data[:N])
-            freqs = np.fft.fftfreq(len(input_data), 1/sample_rate)
-            out_fft = np.abs(fft_res)
-            spectr_fft_dB = 20 * np.log10(out_fft + 1e-12)   #1e-12 needed to avoid inf values
+            out_fft = np.fft.fft(input_data[:N])
+            # freqs = np.fft.fftfreq(len(input_data), 1/sample_rate)
+            # out_fft = np.abs(fft_res)
+            # spectr_fft_dB = 20 * np.log10(out_fft + 1e-12)   #1e-12 needed to avoid inf values
 
         if r_sdft or m_sdft or rsdft_dc or msdft_dc:
             input_data = input_data[:N]
@@ -31,23 +31,23 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
             k_vec = np.arange(N)
             arg = 2 * np.pi * k_vec / N
             if r_sdft:
-                r = 0.995
+                r = 0.99
                 if quant_en:
                     twiddles = quantizer(r * np.cos(arg), num_bits=num_bits, max_amplitude=r) \
                                 - 1j * quantizer(r * np.sin(arg), num_bits=num_bits, max_amplitude=r)
                 else:
                     twiddles = r * np.cos(arg) - 1j * r * np.sin(arg)
             if rsdft_dc:
-                r = 0.995
+                r = 0.99
                 if quant_en:
                     twiddles_dc = quantizer(r * np.cos(arg), num_bits=num_bits, max_amplitude=r) \
                                 - 1j * quantizer(r * np.sin(arg), num_bits=num_bits, max_amplitude=r)
                 else:
                     twiddles_dc = r * np.cos(arg) - 1j * r * np.sin(arg)
             if m_sdft:
-                r = 1#0.999
+                r = 0.999
             if msdft_dc:
-                r = 1#0.999
+                r = 0.999
 
             out_rsdft = np.zeros(input_size, dtype=np.float64)
             out_rsdft_dc = np.zeros(input_size, dtype=np.float64)
