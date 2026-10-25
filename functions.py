@@ -31,23 +31,23 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
             k_vec = np.arange(N)
             arg = 2 * np.pi * k_vec / N
             if r_sdft:
-                r = 0.99
+                r_rsdft = 0.99
                 if quant_en:
-                    twiddles = quantizer(r * np.cos(arg), num_bits=num_bits, max_amplitude=r) \
-                                - 1j * quantizer(r * np.sin(arg), num_bits=num_bits, max_amplitude=r)
+                    twiddles = quantizer(r_rsdft * np.cos(arg), num_bits=num_bits, max_amplitude=r_rsdft) \
+                                + 1j * quantizer(r_rsdft * np.sin(arg), num_bits=num_bits, max_amplitude=r_rsdft)
                 else:
-                    twiddles = r * np.cos(arg) - 1j * r * np.sin(arg)
+                    twiddles = r_rsdft * np.cos(arg) + 1j * r_rsdft * np.sin(arg)
             if rsdft_dc:
-                r = 0.99
+                r_rsdft_dc = 0.99
                 if quant_en:
-                    twiddles_dc = quantizer(r * np.cos(arg), num_bits=num_bits, max_amplitude=r) \
-                                - 1j * quantizer(r * np.sin(arg), num_bits=num_bits, max_amplitude=r)
+                    twiddles_dc = quantizer(r_rsdft_dc * np.cos(arg), num_bits=num_bits, max_amplitude=r_rsdft_dc) \
+                                + 1j * quantizer(r_rsdft_dc * np.sin(arg), num_bits=num_bits, max_amplitude=r_rsdft_dc)
                 else:
-                    twiddles_dc = r * np.cos(arg) - 1j * r * np.sin(arg)
+                    twiddles_dc = r_rsdft_dc * np.cos(arg) + 1j * r_rsdft_dc * np.sin(arg)
             if m_sdft:
-                r = 0.999
+                r_msdft = 1#0.999
             if msdft_dc:
-                r = 0.999
+                r_msdft_dc = 1#0.999
 
             out_rsdft = np.zeros(input_size, dtype=np.float64)
             out_rsdft_dc = np.zeros(input_size, dtype=np.float64)
@@ -85,12 +85,12 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
 
                 if rsdft_dc:       # DC components with resonantor branch
                     if quant_en:
-                        err_rsdf_dc = quantizer(input_data[index] - prev_out_rsdft_dc, num_bits=num_bits)
-                        Z_rsdft_dc = quantizer(quantizer((err_rsdf_dc + Z_rsdft_dc), num_bits=num_bits) * twiddles_dc, num_bits=num_bits)
+                        err_rsdft_dc = quantizer(input_data[index] - prev_out_rsdft_dc, num_bits=num_bits)
+                        Z_rsdft_dc = quantizer(quantizer((err_rsdft_dc + Z_rsdft_dc), num_bits=num_bits) * twiddles_dc, num_bits=num_bits)
                         prev_out_rsdft_dc = quantizer(np.real(Z_rsdft_dc[0]) / N, num_bits=num_bits)      # faster but needs the convergence factor r<1
                     else:
-                        err_rsdf_dc = input_data[index] - prev_out_rsdft_dc
-                        Z_rsdft_dc = (err_rsdf_dc + Z_rsdft_dc) * twiddles_dc
+                        err_rsdft_dc = input_data[index] - prev_out_rsdft_dc
+                        Z_rsdft_dc = (err_rsdft_dc + Z_rsdft_dc) * twiddles_dc
                         prev_out_rsdft_dc = np.real(Z_rsdft_dc[0]) / N      # faster but needs the convergence factor r<1
                     
                     out_rsdft_dc[index] = prev_out_rsdft_dc
@@ -98,32 +98,32 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
                 if m_sdft:         # modulator branch
                     if quant_en:
                         err_msdft = quantizer(input_data[index] - prev_out_msdft, num_bits=num_bits)
-                        twiddle = quantizer(np.cos(arg * index), num_bits=num_bits, max_amplitude=r) \
-                                    + 1j * quantizer(np.sin(arg * index), num_bits=num_bits, max_amplitude=r)       # TODO r may be removed with quantization
+                        twiddle = quantizer(r_msdft * np.cos(arg * index), num_bits=num_bits, max_amplitude=r_msdft) \
+                                    + 1j * quantizer(r_msdft * np.sin(arg * index), num_bits=num_bits, max_amplitude=r_msdft)       # TODO r may be removed with quantization
                         prev_out_msdft = quantizer(np.sum(np.real(Z_msdft * np.conjugate(twiddle))) / N, num_bits=num_bits)
-                        Z_msdft = quantizer(quantizer(r * Z_msdft, num_bits=num_bits) + 
+                        Z_msdft = quantizer(quantizer(r_msdft * Z_msdft, num_bits=num_bits) + 
                                 quantizer(err_msdft * twiddle, num_bits=num_bits))
                     else:
                         err_msdft = input_data[index] - prev_out_msdft
-                        twiddle = np.cos(arg * index) + 1j * np.sin(arg * index)
+                        twiddle = r_msdft * np.cos(arg * index) + 1j * r_msdft * np.sin(arg * index)
                         prev_out_msdft = np.sum(np.real(Z_msdft * np.conjugate(twiddle))) / N
-                        Z_msdft = r * Z_msdft + err_msdft * twiddle
+                        Z_msdft = r_msdft * Z_msdft + err_msdft * twiddle
 
                     out_msdft[index] = prev_out_msdft
 
                 if msdft_dc:
                     if quant_en:
                         err_msdft_dc = quantizer(input_data[index] - prev_out_msdft_dc, num_bits=num_bits)
-                        twiddle__ = quantizer(np.cos(arg * index), num_bits=num_bits, max_amplitude=r) \
-                                    + 1j * quantizer(np.sin(arg * index), num_bits=num_bits, max_amplitude=r)       # TODO r may be removed with quantization
+                        twiddle__ = quantizer(r_msdft_dc * np.cos(arg * index), num_bits=num_bits, max_amplitude=r_msdft_dc) \
+                                    + 1j * quantizer(r_msdft_dc * np.sin(arg * index), num_bits=num_bits, max_amplitude=r_msdft_dc)       # TODO r may be removed with quantization
                         prev_out_msdft_dc = quantizer(np.sum(np.real(Z_msdft_dc[0] * np.conjugate(twiddle__))) / N, num_bits=num_bits)      # faster but needs the convergence factor r<1
-                        Z_msdft_dc = quantizer(quantizer(r * Z_msdft_dc, num_bits=num_bits) + 
+                        Z_msdft_dc = quantizer(quantizer(r_msdft_dc * Z_msdft_dc, num_bits=num_bits) + 
                                 quantizer(err_msdft_dc * twiddle__, num_bits=num_bits))
                     else:
                         err_msdft_dc = input_data[index] - prev_out_msdft_dc
-                        twiddle_ = np.cos(arg * index) + 1j * np.sin(arg * index)
+                        twiddle_ = r_msdft_dc * np.cos(arg * index) + 1j * r_msdft_dc * np.sin(arg * index)
                         prev_out_msdft_dc = np.sum(np.real(Z_msdft_dc[0] * np.conjugate(twiddle_))) / N      # faster but needs the convergence factor r<1
-                        Z_msdft_dc = r * Z_msdft_dc + err_msdft_dc * twiddle_
+                        Z_msdft_dc = r_msdft_dc * Z_msdft_dc + err_msdft_dc * twiddle_
 
                     out_msdft_dc[index] = prev_out_msdft_dc
 

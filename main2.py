@@ -41,12 +41,12 @@ delta_f = fs / window_size
 
 min_k = 1
 max_k = min(window_size // 2 - 1, int(f_max / delta_f))     # ignore Nyquist and DC bins  
-ky = np.unique(np.linspace(min_k, max_k, 10, dtype=int))
+ky = np.unique(np.linspace(min_k, max_k, 5, dtype=int))
 d = 0.25    # frequency sliding factor
 fy  =   {"on_bin"  :   [k * delta_f  for k in ky],
         f"off_bin({d})"   :   [(k-d) * delta_f  for k in ky]}   #Hz
 
-Ax = np.linspace(10/max_amplitude, 1, 10)       # normalized signal amplitudes
+Ax = np.linspace(10/max_amplitude, 1, 5)       # normalized signal amplitudes
 
 n = np.arange(window_size)/fs
 
@@ -69,18 +69,18 @@ err_msdft_dc_tot = np.zeros(half_N)
 
 results = []
 # bin = [<bit number>, <amplitude index>, <frequency index>, <onbin/offbin>, <quant_en>]
-selected_plots = [(8, 3, 5, 0, False), 
-                (8, 8, 5, 0, False), 
-                (8, 3, 5, d, False),
-                (8, 3, 5, d, False),
-                (8, 8, 5, 0, True), 
-                (8, 8, 5, 0, True), 
-                (8, 3, 5, d, True),
-                (8, 8, 5, d, True),
-                (32, 3, 5, 0, True), 
-                (32, 8, 5, 0, True), 
-                (32, 3, 5, d, True),
-                (32, 8, 5, d, True)]
+selected_plots = [(8, 3, 3, 0, False), 
+                (8, 3, 3, 0, False), 
+                (8, 3, 3, d, False),
+                (8, 3, 3, d, False),
+                (8, 3, 3, 0, True), 
+                (8, 3, 3, 0, True), 
+                (8, 3, 3, d, True),
+                (8, 3, 3, d, True),
+                (32, 3, 2, 0, True), 
+                (32, 3, 2, 0, True), 
+                (32, 3, 2, d, True),
+                (32, 3, 2, d, True)]
 
 with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_csv:
     writer = csv.writer(file_csv)
