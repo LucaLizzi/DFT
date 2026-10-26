@@ -17,6 +17,11 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
             # out_fft = np.abs(fft_res)
             # spectr_fft_dB = 20 * np.log10(out_fft + 1e-12)   #1e-12 needed to avoid inf values
 
+        Z_rsdft = np.zeros(N, dtype=np.complex128)
+        Z_rsdft_dc = np.zeros(N, dtype=np.complex128)
+        Z_msdft = np.zeros(N, dtype=np.complex128)
+        Z_msdft_dc = np.zeros(N, dtype=np.complex128)
+
         if r_sdft or m_sdft or rsdft_dc or msdft_dc:
             input_data = input_data[:N]
             input_size = input_data.size
@@ -54,10 +59,6 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
             out_msdft = np.zeros(input_size, dtype=np.float64)
             out_msdft_dc = np.zeros(input_size, dtype=np.float64)
             
-            Z_rsdft = np.zeros(N, dtype=np.complex128)
-            Z_rsdft_dc = np.zeros(N, dtype=np.complex128)
-            Z_msdft = np.zeros(N, dtype=np.complex128)
-            Z_msdft_dc = np.zeros(N, dtype=np.complex128)
 
             prev_out_rsdft = 0.0
             prev_out_msdft = 0.0
