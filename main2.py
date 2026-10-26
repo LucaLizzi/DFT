@@ -19,8 +19,8 @@ import seaborn as sns
 #   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚══════╝
 
 # warm up the kernel
-params = (True, False, False, False, False)
-_, _, _, _, _ = _sdft_kernel(np.zeros(10, dtype=np.float64), 8, 30.0, 44100.0, params)
+# params = (True, False, False, False, False)
+# _, _, _, _, _ = _sdft_kernel(np.zeros(10, dtype=np.float64), 8, 30.0, 44100.0, params)
                                                                     
 # sample_rate, data = wavfile.read("test3_notes.wav")
 OSDFT_R = True  # resonator
@@ -33,7 +33,7 @@ params = (OSDFT_R, RSDFT_DC, OSDFT_M, MSDFT_DC, DFT_FFT)
 window_size = 4096
 fps_animation = 30
 num_bits_list = [64, 32, 16, 8]
-quantizer_enabler = [False, True]
+quantizer_enabler = [True]#, True]
 max_amplitude = 100
 f_max = 15000
 fs = int(40e3)  #Hz
@@ -69,7 +69,9 @@ err_msdft_dc_tot = np.zeros(half_N)
 
 results = []
 # bin = [<bit number>, <amplitude index>, <frequency index>, <onbin/offbin>, <quant_en>]
-selected_plots = [(8, 3, 3, 0, False), 
+selected_plots = [("Ideal (NoQuant)", 3, 3, 0, False),
+                ("Ideal (NoQuant)", 3, 3, d, False),
+                (8, 3, 3, 0, False), 
                 (8, 3, 3, 0, False), 
                 (8, 3, 3, d, False),
                 (8, 3, 3, d, False),
@@ -151,7 +153,7 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                             'Frequency': f, 'Magnitude error': err_abs_msdft_dc, "Complex error": err_cpx_msdft_dc})
 
                         # save plot spectrums and wave data
-                        if (num_bits, index_a, index_f, 0 if bin_ == "on_bin" else d, quant_en) in selected_plots or "ALL" in selected_plots:
+                        if (num_bits or "Ideal (NoQuant)", index_a, index_f, 0 if bin_ == "on_bin" else d, quant_en) in selected_plots or "ALL" in selected_plots:
                             plt_func(f"{"quant" if quant_en else "no_quant"}_{wave_name}", wave_data, num_bits, max_amplitude,
                                 spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft, range(half_N), fs/2)
 

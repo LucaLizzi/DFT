@@ -157,7 +157,7 @@ def bit_err(df_results, fy):
 
 def heat_map(df_results, fy):
     """
-    Heat map between amplitude, frequency and error
+    Heat map between amplitude, frequency and error.
     """
     architectures = df_results['Architecture'].unique()
     bin_types = list(fy.keys())
@@ -177,35 +177,41 @@ def heat_map(df_results, fy):
             
             fig, axes = plt.subplots(len(error_types), len(architectures), 
                                      figsize=(len(architectures) * 4.5, 4 * len(error_types)), 
-                                     sharex=True, sharey=True)
+                                     sharex=True, sharey=False)
 
             if len(architectures) == 1:
                 axes = axes[:, np.newaxis]
 
             for r, err_type in enumerate(error_types):
-                sub_vals = df_subset[err_type]
-                sub_vals_pos = sub_vals[sub_vals > 0]
-                
-                if sub_vals_pos.empty:
-                    continue
-                    
-                vmin = sub_vals_pos.min()
-                vmax = sub_vals_pos.max()
-                
-                if vmin == vmax:
-                    vmin = vmin / 10.0 if vmin > 0 else 1e-10
-                    vmax = vmax * 10.0 if vmax != 0 else 1.0
-
-                norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)
-
                 for c, arch in enumerate(architectures):
-                    ax = axes[r, c]
+                    ax = axes[r, c] if len(error_types) > 1 and len(architectures) > 1 else (axes[c] if len(error_types) == 1 else axes[r])
+                    if isinstance(axes, np.ndarray):
+                        ax = axes[r, c] if axes.ndim == 2 else axes[c if len(architectures) > 1 else r]
+                    else:
+                        ax = axes
+
                     df_arch = df_subset[df_subset['Architecture'] == arch]
                     
                     pivot_table = df_arch.pivot_table(values=err_type, index='Amplitude', columns='Frequency', aggfunc='mean')
                     
                     if pivot_table.empty:
                         continue
+                        
+                    sub_vals = pivot_table.values
+                    sub_vals_pos = sub_vals[sub_vals > 0]
+                    
+                    if sub_vals_pos.size > 0:
+                        vmin = sub_vals_pos.min()
+                        vmax = sub_vals_pos.max()
+                    else:
+                        vmin, vmax = 1e-10, 1.0
+                        
+                    if vmin == vmax:
+                        vmin = vmin / 10.0 if vmin > 0 else 1e-10
+                        vmax = vmax * 10.0 if vmax != 0 else 1.0
+
+                    norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)
+                    # -----------------------------------------------
                         
                     sns.heatmap(
                         pivot_table, 
