@@ -32,7 +32,7 @@ params = (OSDFT_R, RSDFT_DC, OSDFT_M, MSDFT_DC, DFT_FFT)
 
 window_size = 4096
 fps_animation = 30
-num_bits_list = [64, 32, 16, 8]
+num_bits_list = [52, 32, 16, 8] #max 52 bits to be sure
 quantizer_enabler = [True]#, True]
 max_amplitude = 100
 f_max = 15000
