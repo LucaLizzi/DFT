@@ -51,8 +51,10 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
                     twiddles_dc = r_rsdft_dc * np.cos(arg) - 1j * r_rsdft_dc * np.sin(arg)
             if m_sdft:
                 r_msdft = 0.999 # from debug mode: the ideal version doesn't need this
+                r_msdft_ideal = 1
             if msdft_dc:
                 r_msdft_dc = 0.999 # from debug mode: the ideal version doesn't need this
+                r_msdft_dc_ideal = 1
 
             out_rsdft = np.zeros(input_size, dtype=np.float64)
             out_rsdft_dc = np.zeros(input_size, dtype=np.float64)
@@ -106,9 +108,9 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
                                 quantizer(err_msdft * twiddle, num_bits=num_bits), num_bits=num_bits)
                     else:
                         err_msdft = input_data[index] - prev_out_msdft
-                        twiddle = r_msdft * np.cos(arg * index) - 1j * r_msdft * np.sin(arg * index)
+                        twiddle = r_msdft_ideal * np.cos(arg * index) - 1j * r_msdft_ideal * np.sin(arg * index)
                         prev_out_msdft = np.sum(np.real(Z_msdft * np.conjugate(twiddle))) / N
-                        Z_msdft = r_msdft * Z_msdft + err_msdft * twiddle
+                        Z_msdft = r_msdft_ideal * Z_msdft + err_msdft * twiddle
 
                     out_msdft[index] = prev_out_msdft
 
@@ -122,9 +124,9 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
                                 quantizer(err_msdft_dc * twiddle__, num_bits=num_bits), num_bits=num_bits)
                     else:
                         err_msdft_dc = input_data[index] - prev_out_msdft_dc
-                        twiddle_ = r_msdft_dc * np.cos(arg * index) - 1j * r_msdft_dc * np.sin(arg * index)
+                        twiddle_ = r_msdft_dc_ideal * np.cos(arg * index) - 1j * r_msdft_dc_ideal * np.sin(arg * index)
                         prev_out_msdft_dc = np.sum(np.real(Z_msdft_dc[0] * np.conjugate(twiddle_))) / N      # faster but needs the convergence factor r<1
-                        Z_msdft_dc = r_msdft_dc * Z_msdft_dc + err_msdft_dc * twiddle_
+                        Z_msdft_dc = r_msdft_dc_ideal * Z_msdft_dc + err_msdft_dc * twiddle_
 
                     out_msdft_dc[index] = prev_out_msdft_dc
 
