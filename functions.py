@@ -117,7 +117,7 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
                         err_msdft_dc = quantizer(input_data[index] - prev_out_msdft_dc, num_bits=num_bits)
                         twiddle__ = quantizer(r_msdft_dc * np.cos(arg * index), num_bits=num_bits) \
                                     - 1j * quantizer(r_msdft_dc * np.sin(arg * index), num_bits=num_bits)       # TODO r may be removed with quantization
-                        prev_out_msdft_dc = quantizer(np.sum(np.real(Z_msdft_dc[0] * np.conjugate(twiddle__))) / N, num_bits=num_bits)      # faster but needs the convergence factor r<1
+                        prev_out_msdft_dc = quantizer(np.sum(np.real(Z_msdft_dc[0])) / N, num_bits=num_bits)      # faster but needs the convergence factor r<1
                         Z_msdft_dc = quantizer(quantizer(r_msdft_dc * Z_msdft_dc, num_bits=num_bits) + 
                                 quantizer(err_msdft_dc * twiddle__, num_bits=num_bits), num_bits=num_bits)
                     else:
