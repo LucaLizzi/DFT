@@ -1,14 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.io import wavfile
-from numba import jit
-import matplotlib.animation as animation
-from functions import _sdft_kernel, plt_func, quantizer
+from functions import plt_func, quantizer_ext, rsdft, rsdft_dc, msdft, msdft_dc
 from plot_functions import heat_map, err_vs_freq, bit_err
 import time
 import csv
 import pandas as pd
-import seaborn as sns
 
 
 # ██╗   ██╗ █████╗ ██████╗ ██╗ █████╗ ██████╗ ██╗     ███████╗███████╗
@@ -94,11 +90,16 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
         for num_bits in num_bits_list:            
             num_bits = num_bits if quant_en else "Ideal (NoQuant)"
 
+            r_rsdft_ideal, r_rsdft_quant = None, None
+            r_rsdft_dc_ideal, r_rsdft_dc_quant = None, None
+            r_msdft_ideal, r_msdft_quant = None, None
+            r_msdft_dc_ideal, r_msdft_dc_quant = None, None
+
             for index_a, a in enumerate(Ax):    
                 for bin_, f_y in fy.items():
                     for index_f, f in enumerate(f_y):
                         if quant_en:
-                            wave_data = quantizer(a * np.sin(2 * np.pi * f * n), num_bits=num_bits)
+                            wave_data = quantizer_ext(a * np.sin(2 * np.pi * f * n), num_bits=num_bits)
                             wave_name = f"amp={round(a,2)}_f={round(f,2)}Hz_{bin_}_{num_bits}bits"
                         else:   
                             wave_data = a * np.sin(2 * np.pi * f * n)
@@ -106,9 +107,15 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
 
                         start_time = time.time()
 
-                        spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft = _sdft_kernel(input_data=wave_data, 
-                            N=window_size, fps_animation=fps_animation, sample_rate=fs, params=params, 
-                            quant_en=quant_en, num_bits=num_bits, max_amplitude=max_amplitude)
+                        spectr_fft = np.fft.fft(wave_data[:window_size])
+                        spectr_rsdft, r_rsdft_ideal, r_rsdft_quant = rsdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
+                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_rsdft_ideal, r_quant=r_rsdft_quant)
+                        spectr_rsdft_dc, r_rsdft_dc_ideal, r_rsdft_dc_quant = rsdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
+                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_rsdft_dc_ideal, r_quant=r_rsdft_dc_quant)
+                        spectr_msdft, r_msdft_ideal, r_msdft_quant = msdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
+                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_msdft_ideal, r_quant=r_msdft_quant)
+                        spectr_msdft_dc, r_msdft_dc_ideal, r_msdft_dc_quant = msdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
+                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_msdft_dc_ideal, r_quant=r_msdft_dc_quant)
 
                         # consider only the first half of the spectrum
                         spectr_rsdft = spectr_rsdft[:half_N]
@@ -141,16 +148,16 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                         # save results
                         results.append({
                             'Architecture': "rsdft", 'Bits': num_bits, 'Amplitude': a, 'BinType': bin_,
-                            'Frequency': f, 'Magnitude error': err_abs_rsdft, "Complex error": err_cpx_rsdft})
+                            'Frequency': f, 'Magnitude error': err_abs_rsdft, "Complex error": err_cpx_rsdft, "r_ideal": r_rsdft_ideal, "r_quant": r_rsdft_quant})
                         results.append({
                             'Architecture': "rsdft_dc", 'Bits': num_bits, 'Amplitude': a, 'BinType': bin_,
-                            'Frequency': f, 'Magnitude error': err_abs_rsdft_dc, "Complex error": err_cpx_rsdft_dc})
+                            'Frequency': f, 'Magnitude error': err_abs_rsdft_dc, "Complex error": err_cpx_rsdft_dc, "r_ideal": r_rsdft_dc_ideal, "r_quant": r_rsdft_dc_quant})
                         results.append({
                             'Architecture': "msdft", 'Bits': num_bits, 'Amplitude': a, 'BinType': bin_,
-                            'Frequency': f, 'Magnitude error': err_abs_msdft, "Complex error": err_cpx_msdft})
+                            'Frequency': f, 'Magnitude error': err_abs_msdft, "Complex error": err_cpx_msdft, "r_ideal": r_msdft_ideal, "r_quant": r_msdft_quant})
                         results.append({
                             'Architecture': "msdft_dc", 'Bits': num_bits, 'Amplitude': a, 'BinType': bin_,
-                            'Frequency': f, 'Magnitude error': err_abs_msdft_dc, "Complex error": err_cpx_msdft_dc})
+                            'Frequency': f, 'Magnitude error': err_abs_msdft_dc, "Complex error": err_cpx_msdft_dc, "r_ideal": r_msdft_dc_ideal, "r_quant": r_msdft_dc_quant})
 
                         # save plot spectrums and wave data
                         if (num_bits or "Ideal (NoQuant)", index_a, index_f, 0 if bin_ == "on_bin" else d, quant_en) in selected_plots or "ALL" in selected_plots:
