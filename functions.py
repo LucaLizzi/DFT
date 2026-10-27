@@ -36,23 +36,23 @@ def _sdft_kernel(input_data:None, N:10, fps_animation:int=30,
             k_vec = np.arange(N)
             arg = 2 * np.pi * k_vec / N
             if r_sdft:
-                r_rsdft = 1
+                r_rsdft = 0.999     #checked in debug mode the abs(twiddles), with 1 some values are > 1 (both ideal and quantized)
                 if quant_en:
                     twiddles = quantizer(r_rsdft * np.cos(arg), num_bits=num_bits) \
                                 - 1j * quantizer(r_rsdft * np.sin(arg), num_bits=num_bits)
                 else:
                     twiddles = r_rsdft * np.cos(arg) - 1j * r_rsdft * np.sin(arg)
             if rsdft_dc:
-                r_rsdft_dc = 1
+                r_rsdft_dc = 0.999     #checked in debug mode the abs(twiddles), with 1 some values are > 1 (both ideal and quantized)
                 if quant_en:
                     twiddles_dc = quantizer(r_rsdft_dc * np.cos(arg), num_bits=num_bits) \
                                 - 1j * quantizer(r_rsdft_dc * np.sin(arg), num_bits=num_bits)
                 else:
                     twiddles_dc = r_rsdft_dc * np.cos(arg) - 1j * r_rsdft_dc * np.sin(arg)
             if m_sdft:
-                r_msdft = 1
+                r_msdft = 0.999 # from debug mode: the ideal version doesn't need this
             if msdft_dc:
-                r_msdft_dc = 1
+                r_msdft_dc = 0.999 # from debug mode: the ideal version doesn't need this
 
             out_rsdft = np.zeros(input_size, dtype=np.float64)
             out_rsdft_dc = np.zeros(input_size, dtype=np.float64)
