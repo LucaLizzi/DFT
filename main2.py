@@ -5,6 +5,9 @@ from plot_functions import heat_map, err_vs_freq, bit_err
 import time
 import csv
 import pandas as pd
+import os
+
+os.makedirs("./images", exist_ok=True)
 
 
 # ██╗   ██╗ █████╗ ██████╗ ██╗ █████╗ ██████╗ ██╗     ███████╗███████╗

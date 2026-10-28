@@ -16,7 +16,7 @@ def rsdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
 
     # check of the constant
     v = [1.0]
-    if SEARCH_R and (r_quant in v or r_ideal in v):
+    if SEARCH_R and ((quant_en and r_quant in v) or (not quant_en and r_ideal in v)):
         ok = False
         while(ok==False):
             if quant_en:
@@ -63,7 +63,7 @@ def rsdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_b
 
     # check of the constant
     v = [1.0]
-    if SEARCH_R and (r_quant in v or r_ideal in v):
+    if SEARCH_R and ((quant_en and r_quant in v) or (not quant_en and r_ideal in v)):
         ok = False
         while(ok==False):
             if quant_en:
@@ -110,7 +110,7 @@ def msdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
 
     # check of the constant
     v = [1.0]
-    if SEARCH_R and (r_quant in v or r_ideal in v):
+    if SEARCH_R and ((quant_en and r_quant in v) or (not quant_en and r_ideal in v)):
         ok = False
         while(ok==False):
             if quant_en:
@@ -163,7 +163,7 @@ def msdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_b
 
     # check of the constant
     v = [1.0]
-    if SEARCH_R and (r_quant in v or r_ideal in v):
+    if SEARCH_R and ((quant_en and r_quant in v) or (not quant_en and r_ideal in v)):
         ok = False
         while(ok==False):
             if quant_en:

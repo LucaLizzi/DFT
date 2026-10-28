@@ -25,10 +25,16 @@ def err_vs_freq(df_results, fy):
             for arch in df_subset['Architecture'].unique():
                 df_arch = df_subset[df_subset['Architecture'] == arch]
                 r_val = None
-                if 'r_quant' in df_arch and not df_arch['r_quant'].empty and not pd.isna(df_arch['r_quant'].iloc[0]):
-                    r_val = df_arch['r_quant'].iloc[0]
-                elif 'r_ideal' in df_arch and not df_arch['r_ideal'].empty and not pd.isna(df_arch['r_ideal'].iloc[0]):
-                    r_val = df_arch['r_ideal'].iloc[0]
+                
+                # Se siamo nel caso ideale, usiamo r_ideal; altrimenti r_quant (se disponibile)
+                if bits_val == "Ideal (NoQuant)":
+                    if 'r_ideal' in df_arch and not df_arch['r_ideal'].empty and not pd.isna(df_arch['r_ideal'].iloc[0]):
+                        r_val = df_arch['r_ideal'].iloc[0]
+                else:
+                    if 'r_quant' in df_arch and not df_arch['r_quant'].empty and not pd.isna(df_arch['r_quant'].iloc[0]):
+                        r_val = df_arch['r_quant'].iloc[0]
+                    elif 'r_ideal' in df_arch and not df_arch['r_ideal'].empty and not pd.isna(df_arch['r_ideal'].iloc[0]):
+                        r_val = df_arch['r_ideal'].iloc[0]
                 
                 if r_val is not None:
                     legend_labels[arch] = f"{arch} (r={r_val:.4f})"
