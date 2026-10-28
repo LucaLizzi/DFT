@@ -28,7 +28,7 @@ def rsdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
                 if np.all(np.abs(twiddles_ideal) <= 1.0): ok = True
                 else: r_ideal -= 0.001            
     else:
-        if quant_en:    twiddles_quant = quantizer(r_quant * np.exp(-1j * arg))
+        if quant_en:    twiddles_quant = quantizer(r_quant * np.exp(-1j * arg), num_bits=num_bits)
         else:           twiddles_ideal = r_ideal * np.exp(-1j * arg)
 
     # variables
@@ -75,7 +75,7 @@ def rsdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_b
                 if np.all(np.abs(twiddles_ideal) <= 1.0): ok = True
                 else: r_ideal -= 0.001            
     else:
-        if quant_en:    twiddles_quant = quantizer(r_quant * np.exp(-1j * arg))
+        if quant_en:    twiddles_quant = quantizer(r_quant * np.exp(-1j * arg), num_bits=num_bits)
         else:           twiddles_ideal = r_ideal * np.exp(-1j * arg)
 
     # variables
@@ -221,12 +221,12 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
     ax[0,0].set_xscale('log')
 
     ax[0,1].plot(x, rsdft_dc, color='gray', alpha=0.6)
-    ax[0,1].set_title(f"rsdft_dc (r={r_rsdft_dc_quant if quant_en else r_rsdft_dc_ideal}")
+    ax[0,1].set_title(f"rsdft_dc (r={r_rsdft_dc_quant if quant_en else r_rsdft_dc_ideal})")
     ax[0,1].set_xlabel("Frequency (kHz)")
     ax[0,1].set_xscale('log')
 
     ax[0,2].plot(x, msdft, color='gray', alpha=0.6)
-    ax[0,2].set_title(f"msdft (r={r_msdft_quant if quant_en else r_msdft_ideal}")
+    ax[0,2].set_title(f"msdft (r={r_msdft_quant if quant_en else r_msdft_ideal})")
     ax[0,2].set_xlabel("Frequency (kHz)")
     ax[0,2].set_xscale('log')
 
@@ -236,7 +236,7 @@ def plt_func(wave_name, wave_data, num_bits, max_amplitude,
     ax[1,1].set_xscale('log')
 
     ax[1,2].plot(x, msdft_dc, color='gray', alpha=0.6)
-    ax[1,2].set_title(f"msdft_dc (r={r_msdft_dc_quant if quant_en else r_msdft_dc_ideal}")
+    ax[1,2].set_title(f"msdft_dc (r={r_msdft_dc_quant if quant_en else r_msdft_dc_ideal})")
     ax[1,2].set_xlabel("Frequency (kHz)")
     ax[1,2].set_xscale('log')
 
