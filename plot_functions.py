@@ -7,9 +7,6 @@ import pandas as pd
 
 
 def err_vs_freq(df_results, fy):
-    """
-    Error vs frequency plots showing r_ideal and r_quant values.
-    """
     bin_types = list(fy.keys())
     bit_levels = df_results['Bits'].unique()
     
@@ -24,18 +21,23 @@ def err_vs_freq(df_results, fy):
                 
             bits_str_safe = str(bits_val).replace(" ", "_").replace("(", "").replace(")", "")
             
-            r_ideal_val = df_subset['r_ideal'].iloc[0] if 'r_ideal' in df_subset and not df_subset['r_ideal'].empty else None
-            r_quant_val = df_subset['r_quant'].iloc[0] if 'r_quant' in df_subset and not df_subset['r_quant'].empty else None
-            
-            info_str = ""
-            if r_ideal_val is not None and not pd.isna(r_ideal_val):
-                info_str += f" | r_ideal: {r_ideal_val:.6f}"
-            if r_quant_val is not None and not pd.isna(r_quant_val):
-                info_str += f" | r_quant: {r_quant_val:.6f}"
+            legend_labels = {}
+            for arch in df_subset['Architecture'].unique():
+                df_arch = df_subset[df_subset['Architecture'] == arch]
+                r_val = None
+                if 'r_quant' in df_arch and not df_arch['r_quant'].empty and not pd.isna(df_arch['r_quant'].iloc[0]):
+                    r_val = df_arch['r_quant'].iloc[0]
+                elif 'r_ideal' in df_arch and not df_arch['r_ideal'].empty and not pd.isna(df_arch['r_ideal'].iloc[0]):
+                    r_val = df_arch['r_ideal'].iloc[0]
+                
+                if r_val is not None:
+                    legend_labels[arch] = f"{arch} (r={r_val:.4f})"
+                else:
+                    legend_labels[arch] = arch
 
             # --- 1. MAGNITUDE ERROR VS FREQUENCY ---
             plt.figure(figsize=(10, 6))
-            sns.lineplot(
+            ax = sns.lineplot(
                 data=df_subset, 
                 x='Frequency', 
                 y='Magnitude error', 
@@ -44,19 +46,23 @@ def err_vs_freq(df_results, fy):
             )  
             plt.yscale('log')
             plt.minorticks_on()
-            plt.title(f"Magnitude Error vs Frequency\nBin: {bin_val} | Bits: {bits_val}{info_str}")
+            plt.title(f"Magnitude Error vs Frequency\nBin: {bin_val} | Bits: {bits_val}")
             plt.xlabel("Frequency (Hz)")
             plt.ylabel("Spectral Magnitude Error")
             plt.grid(True, which="major", ls="-", alpha=0.6)
             plt.grid(True, which="minor", ls=":", alpha=0.3)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            
+            handles, labels = ax.get_legend_handles_labels()
+            new_labels = [legend_labels.get(lbl, lbl) for lbl in labels]
+            plt.legend(handles=handles, labels=new_labels, bbox_to_anchor=(1.05, 1), loc='upper left')
+            
             plt.tight_layout()
             plt.savefig(f"./images/magnitude_error_freq_{safe_bin_name}_bits_{bits_str_safe}.png", dpi=300, bbox_inches='tight')
             plt.close()
 
             # --- 2. COMPLEX ERROR VS FREQUENCY ---
             plt.figure(figsize=(10, 6))
-            sns.lineplot(
+            ax = sns.lineplot(
                 data=df_subset, 
                 x='Frequency', 
                 y='Complex error', 
@@ -65,22 +71,22 @@ def err_vs_freq(df_results, fy):
             )  
             plt.yscale('log')
             plt.minorticks_on()
-            plt.title(f"Complex Global Error vs Frequency\nBin: {bin_val} | Bits: {bits_val}{info_str}")
+            plt.title(f"Complex Global Error vs Frequency\nBin: {bin_val} | Bits: {bits_val}")
             plt.xlabel("Frequency (Hz)")
             plt.ylabel("Spectral Complex Error")
             plt.grid(True, which="major", ls="-", alpha=0.6)
             plt.grid(True, which="minor", ls=":", alpha=0.3)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            
+            handles, labels = ax.get_legend_handles_labels()
+            new_labels = [legend_labels.get(lbl, lbl) for lbl in labels]
+            plt.legend(handles=handles, labels=new_labels, bbox_to_anchor=(1.05, 1), loc='upper left')
+            
             plt.tight_layout()
             plt.savefig(f"./images/complex_error_freq_{safe_bin_name}_bits_{bits_str_safe}.png", dpi=300, bbox_inches='tight')
             plt.close()
 
 
 def bit_err(df_results, fy):
-    """
-    Bits number vs error plots, displaying r_quant next to bit values on the X-axis
-    and r_ideal in the legend.
-    """
     bin_types = list(fy.keys())
     
     for bin_val in bin_types:
@@ -98,7 +104,7 @@ def bit_err(df_results, fy):
         
         r_quant_by_bits = df_quant.groupby('Bits_num')['r_quant'].mean()
         bit_labels_map = {
-            b: f"{b}\n(r_q={r_quant_by_bits[b]:.5f})" if b in r_quant_by_bits and not pd.isna(r_quant_by_bits[b]) else str(b)
+            b: f"{b}\n(r_q={r_quant_by_bits[b]:.4f})" if b in r_quant_by_bits and not pd.isna(r_quant_by_bits[b]) else str(b)
             for b in sorted(df_quant['Bits_num'].unique())
         }
         
@@ -124,14 +130,14 @@ def bit_err(df_results, fy):
             
             for arch, err_val in ideal_medians.items():
                 color = arch_color_map.get(arch, 'black')
-                r_id_str = f" | r_ideal={r_ideal_medians[arch]:.5f}" if arch in r_ideal_medians and not pd.isna(r_ideal_medians[arch]) else ""
+                r_id_str = f" (r_ideal={r_ideal_medians[arch]:.4f})" if arch in r_ideal_medians and not pd.isna(r_ideal_medians[arch]) else ""
                 plt.axhline(
                     y=err_val, 
                     color=color, 
                     linestyle='--', 
                     linewidth=1.5, 
                     alpha=0.7, 
-                    label=f"{arch} (Ideal{r_id_str})"
+                    label=f"{arch} Ideal{r_id_str}"
                 )
 
         plt.yscale('log')
@@ -154,7 +160,7 @@ def bit_err(df_results, fy):
 
         # --- 2. COMPLEX ERROR VS BITS ---
         plt.figure(figsize=(9, 5.5))
-        sns.lineplot(
+        ax = sns.lineplot(
             data=df_quant, 
             x='Bits_num', 
             y='Complex error', 
@@ -170,14 +176,14 @@ def bit_err(df_results, fy):
             
             for arch, err_val in ideal_medians.items():
                 color = arch_color_map.get(arch, 'black')
-                r_id_str = f" | r_ideal={r_ideal_medians[arch]:.5f}" if arch in r_ideal_medians and not pd.isna(r_ideal_medians[arch]) else ""
+                r_id_str = f" (r_ideal={r_ideal_medians[arch]:.4f})" if arch in r_ideal_medians and not pd.isna(r_ideal_medians[arch]) else ""
                 plt.axhline(
                     y=err_val, 
                     color=color, 
                     linestyle='--', 
                     linewidth=1.5, 
                     alpha=0.7, 
-                    label=f"{arch} (Ideal{r_id_str})"
+                    label=f"{arch} Ideal{r_id_str}"
                 )
 
         plt.yscale('log')

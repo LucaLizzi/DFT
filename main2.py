@@ -90,10 +90,10 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
         for num_bits in num_bits_list:            
             num_bits = num_bits if quant_en else "Ideal (NoQuant)"
 
-            r_rsdft_ideal, r_rsdft_quant = None, None
-            r_rsdft_dc_ideal, r_rsdft_dc_quant = None, None
-            r_msdft_ideal, r_msdft_quant = None, None
-            r_msdft_dc_ideal, r_msdft_dc_quant = None, None
+            r_rsdft_ideal, r_rsdft_quant = 1.0, 1.0
+            r_rsdft_dc_ideal, r_rsdft_dc_quant = 1.0, 1.0
+            r_msdft_ideal, r_msdft_quant = 1.0, 1.0
+            r_msdft_dc_ideal, r_msdft_dc_quant = 1.0, 1.0
 
             for index_a, a in enumerate(Ax):    
                 for bin_, f_y in fy.items():
@@ -109,13 +109,13 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
 
                         spectr_fft = np.fft.fft(wave_data[:window_size])
                         spectr_rsdft, r_rsdft_ideal, r_rsdft_quant = rsdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_rsdft_ideal, r_quant=r_rsdft_quant)
+                                                 num_bits=num_bits, r_ideal=r_rsdft_ideal, r_quant=r_rsdft_quant)
                         spectr_rsdft_dc, r_rsdft_dc_ideal, r_rsdft_dc_quant = rsdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_rsdft_dc_ideal, r_quant=r_rsdft_dc_quant)
+                                                 num_bits=num_bits, r_ideal=r_rsdft_dc_ideal, r_quant=r_rsdft_dc_quant)
                         spectr_msdft, r_msdft_ideal, r_msdft_quant = msdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_msdft_ideal, r_quant=r_msdft_quant)
+                                                 num_bits=num_bits, r_ideal=r_msdft_ideal, r_quant=r_msdft_quant)
                         spectr_msdft_dc, r_msdft_dc_ideal, r_msdft_dc_quant = msdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, max_amplitude=max_amplitude, r_ideal=r_msdft_dc_ideal, r_quant=r_msdft_dc_quant)
+                                                 num_bits=num_bits, r_ideal=r_msdft_dc_ideal, r_quant=r_msdft_dc_quant)
 
                         # consider only the first half of the spectrum
                         spectr_rsdft = spectr_rsdft[:half_N]
@@ -162,7 +162,9 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                         # save plot spectrums and wave data
                         if (num_bits or "Ideal (NoQuant)", index_a, index_f, 0 if bin_ == "on_bin" else d, quant_en) in selected_plots or "ALL" in selected_plots:
                             plt_func(f"{"quant" if quant_en else "no_quant"}_{wave_name}", wave_data, num_bits, max_amplitude,
-                                spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft, range(half_N), fs/2)
+                                spectr_rsdft, spectr_rsdft_dc, spectr_msdft, spectr_msdft_dc, spectr_fft, range(half_N), fs/2, quant_en,
+                                r_rsdft_ideal, r_rsdft_quant, r_rsdft_dc_ideal, r_rsdft_dc_quant, 
+                                r_msdft_ideal, r_msdft_quant, r_msdft_dc_ideal, r_msdft_dc_quant)
 
                         writer.writerow([
                             wave_name, 
