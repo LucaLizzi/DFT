@@ -8,6 +8,7 @@ import pandas as pd
 import os
 
 os.makedirs("./images", exist_ok=True)
+print("Starting tests...")
 
 
 # ██╗   ██╗ █████╗ ██████╗ ██╗ █████╗ ██████╗ ██╗     ███████╗███████╗
@@ -37,6 +38,8 @@ max_amplitude = 100
 f_max = 15000
 fs = int(40e3)  #Hz
 delta_f = fs / window_size
+phase = 0   #0.33 * np.pi / 2
+hw_err = False
 
 min_k = 1
 max_k = min(window_size // 2 - 1, int(f_max / delta_f))     # ignore Nyquist and DC bins  
@@ -83,7 +86,7 @@ selected_plots = [("Ideal (NoQuant)", 3, 3, 0, False),
                 (32, 3, 2, d, True),
                 (32, 3, 2, d, True)]
 
-with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_csv:
+with open('./images/error_results.csv', mode='w', newline='', encoding='utf-8') as file_csv:
     writer = csv.writer(file_csv)
 
     writer.writerow(["wave name", "err absolute rsdft", "err complex rsdft", "err absolute rsdft_dc", "err complex rsdft_dc", 
@@ -102,23 +105,23 @@ with open('error_results.csv', mode='w', newline='', encoding='utf-8') as file_c
                 for bin_, f_y in fy.items():
                     for index_f, f in enumerate(f_y):
                         if quant_en:
-                            wave_data = quantizer_ext(a * np.sin(2 * np.pi * f * n), num_bits=num_bits)
+                            wave_data = quantizer_ext(a * np.sin(2 * np.pi * f * n + phase), num_bits=num_bits)
                             wave_name = f"amp={round(a,2)}_f={round(f,2)}Hz_{bin_}_{num_bits}bits"
                         else:   
-                            wave_data = a * np.sin(2 * np.pi * f * n)
+                            wave_data = a * np.sin(2 * np.pi * f * n + phase)
                             wave_name = f"amp={a}_f={f}Hz_{bin_}_noQuant"
 
                         start_time = time.time()
 
                         spectr_fft = np.fft.fft(wave_data[:window_size])
                         spectr_rsdft, r_rsdft_ideal, r_rsdft_quant = rsdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, r_ideal=r_rsdft_ideal, r_quant=r_rsdft_quant)
+                                                 num_bits=num_bits, r_ideal=r_rsdft_ideal, r_quant=r_rsdft_quant, hw_err = hw_err)
                         spectr_rsdft_dc, r_rsdft_dc_ideal, r_rsdft_dc_quant = rsdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, r_ideal=r_rsdft_dc_ideal, r_quant=r_rsdft_dc_quant)
+                                                 num_bits=num_bits, r_ideal=r_rsdft_dc_ideal, r_quant=r_rsdft_dc_quant, hw_err = hw_err)
                         spectr_msdft, r_msdft_ideal, r_msdft_quant = msdft(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, r_ideal=r_msdft_ideal, r_quant=r_msdft_quant)
+                                                 num_bits=num_bits, r_ideal=r_msdft_ideal, r_quant=r_msdft_quant, hw_err = hw_err)
                         spectr_msdft_dc, r_msdft_dc_ideal, r_msdft_dc_quant = msdft_dc(input_data=wave_data, N=window_size, sample_rate=fs, quant_en=quant_en, 
-                                                 num_bits=num_bits, r_ideal=r_msdft_dc_ideal, r_quant=r_msdft_dc_quant)
+                                                 num_bits=num_bits, r_ideal=r_msdft_dc_ideal, r_quant=r_msdft_dc_quant, hw_err = hw_err)
 
                         # consider only the first half of the spectrum
                         spectr_rsdft = spectr_rsdft[:half_N]

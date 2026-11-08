@@ -3,15 +3,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 SEARCH_R = False
+LOW_ERR = -0.06
+HIGH_ERR = 0.06
 
 # @jit(nopython=True, fastmath=True)
 def rsdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits:int=8, max_amplitude:float=1.0, 
-          r_ideal:float=1.0, r_quant:float=1.0):
+          r_ideal:float=1.0, r_quant:float=1.0, hw_err:bool=False):
 
     input_data = input_data[:N]
     input_size = input_data.size
-
+    
     k_vec = np.arange(N)
+    if hw_err:
+        rng = np.random.default_rng()
+        k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
     arg = 2 * np.pi * k_vec / N
 
     # check of the constant
@@ -53,12 +58,15 @@ def rsdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
             
 # @njit(cache=True)
 def rsdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits:int=8, max_amplitude:float=1.0, 
-          r_ideal:float=1.0, r_quant:float=1.0):
+          r_ideal:float=1.0, r_quant:float=1.0, hw_err:bool=False):
 
     input_data = input_data[:N]
     input_size = input_data.size
 
     k_vec = np.arange(N)
+    if hw_err:
+        rng = np.random.default_rng()
+        k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
     arg = 2 * np.pi * k_vec / N
 
     # check of the constant
@@ -100,12 +108,15 @@ def rsdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_b
 
 # @njit(cache=True)
 def msdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits:int=8, max_amplitude:float=1.0, 
-          r_ideal:float=1.0, r_quant:float=1.0):
+          r_ideal:float=1.0, r_quant:float=1.0, hw_err:bool=False):
 
     input_data = input_data[:N]
     input_size = input_data.size
 
     k_vec = np.arange(N)
+    if hw_err:
+        rng = np.random.default_rng()
+        k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
     arg = 2 * np.pi * k_vec / N
 
     # check of the constant
@@ -153,12 +164,15 @@ def msdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
 
 # @njit(cache=True)
 def msdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits:int=8, max_amplitude:float=1.0, 
-          r_ideal:float=1.0, r_quant:float=1.0):
+          r_ideal:float=1.0, r_quant:float=1.0, hw_err:bool=False):
 
     input_data = input_data[:N]
     input_size = input_data.size
 
     k_vec = np.arange(N)
+    if hw_err:
+        rng = np.random.default_rng()
+        k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
     arg = 2 * np.pi * k_vec / N
 
     # check of the constant
