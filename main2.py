@@ -32,8 +32,8 @@ params = (OSDFT_R, RSDFT_DC, OSDFT_M, MSDFT_DC, DFT_FFT)
 
 window_size = 4096
 fps_animation = 30
-num_bits_list = [32, 16, 8] #max 52 bits to be sure
-quantizer_enabler = [True]#, True]
+num_bits_list = [32, 24, 16, 12, 8] #max 52 bits to be sure
+quantizer_enabler = [False]
 max_amplitude = 100
 f_max = 15000
 fs = int(40e3)  #Hz
@@ -43,12 +43,12 @@ hw_err = False
 
 min_k = 1
 max_k = min(window_size // 2 - 1, int(f_max / delta_f))     # ignore Nyquist and DC bins  
-ky = np.unique(np.linspace(min_k, max_k, 5, dtype=int))
+ky = np.unique(np.linspace(min_k, max_k, 10, dtype=int))
 d = 0.25    # frequency sliding factor
 fy  =   {"on_bin"  :   [k * delta_f  for k in ky],
         f"off_bin({d})"   :   [(k-d) * delta_f  for k in ky]}   #Hz
 
-Ax = np.linspace(10/max_amplitude, 1, 5)       # normalized signal amplitudes
+Ax = np.linspace(10/max_amplitude, 1, 10)       # normalized signal amplitudes
 
 n = np.arange(window_size)/fs
 

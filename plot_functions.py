@@ -26,7 +26,7 @@ def err_vs_freq(df_results, fy):
                 df_arch = df_subset[df_subset['Architecture'] == arch]
                 r_val = None
                 
-                # Se siamo nel caso ideale, usiamo r_ideal; altrimenti r_quant (se disponibile)
+                # In the ideal case, use r_ideal; otherwise, use r_quant if available.
                 if bits_val == "Ideal (NoQuant)":
                     if 'r_ideal' in df_arch and not df_arch['r_ideal'].empty and not pd.isna(df_arch['r_ideal'].iloc[0]):
                         r_val = df_arch['r_ideal'].iloc[0]
@@ -214,6 +214,8 @@ def heat_map(df_results, fy):
     """
     Heat map between amplitude, frequency and error, including r_ideal and r_quant in titles.
     """
+    import matplotlib.ticker as ticker  # Make sure to import it if it is not already present.
+
     architectures = df_results['Architecture'].unique()
     bin_types = list(fy.keys())
     error_types = ['Magnitude error', 'Complex error']
@@ -256,10 +258,10 @@ def heat_map(df_results, fy):
                     
                     coeff_str = ""
                     if r_id_val is not None and not pd.isna(r_id_val):
-                        coeff_str += f"r_id: {r_id_val:.4f}"
+                        coeff_str += f"r_id: {r_id_val:.2f}"  # Rounded to 2 decimal places.
                     if r_q_val is not None and not pd.isna(r_q_val):
                         if coeff_str: coeff_str += " | "
-                        coeff_str += f"r_q: {r_q_val:.4f}"
+                        coeff_str += f"r_q: {r_q_val:.2f}"  # Rounded to 2 decimal places.
                     
                     pivot_table = df_arch.pivot_table(values=err_type, index='Amplitude', columns='Frequency', aggfunc='mean')
                     
@@ -288,6 +290,14 @@ def heat_map(df_results, fy):
                         norm=norm,
                         cbar=True
                     )
+                    
+                    # --- APPLY TICK FORMATTING (MAXIMUM 2 DECIMAL PLACES) ---
+                    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+                    ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+                    
+                    # Rotate the x-axis labels to prevent overlap.
+                    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+                    # -------------------------------------------------------------
                     
                     title_text = f"{arch} | {err_type}\nBits: {bits_val}"
                     if coeff_str:

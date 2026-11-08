@@ -1,7 +1,11 @@
 # Setup instructions
-Activate the virtual environment: Run *source venv/bin/activate* (Linux/macOS) or *venv\Scripts\activate* (Windows) in your terminal.
-Install requirements: Execute *pip install -r requirements.txt* to install all required dependencies (Python 3.13.15 is used).
-Configure and run: Specify the path to your target .wav audio file inside main.py and run the program using *python main\.py*.
+Create and activate a virtual environment, then install the project dependencies:
+
+- Windows PowerShell: `py -3.13 -m venv .venv`, then `.\.venv\Scripts\Activate.ps1`
+- Linux/macOS: `python3 -m venv .venv`, then `source .venv/bin/activate`
+- All platforms: `python -m pip install -r requirements.txt`
+
+In VS Code, select the `.venv` interpreter. Run the DFT experiment with `python main2.py`.
 
 
 # Audio Dataset Description
