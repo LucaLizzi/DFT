@@ -1,0 +1,37 @@
+Version 4
+SymbolType BLOCK
+RECTANGLE Normal -64 -184 80 184
+WINDOW 0 8 -184 Bottom 2
+PIN -64 -128 LEFT 8
+PINATTR PinName e_bit0
+PINATTR SpiceOrder 1
+PIN -64 -96 LEFT 8
+PINATTR PinName e_bit1
+PINATTR SpiceOrder 2
+PIN -64 -64 LEFT 8
+PINATTR PinName e_bit2
+PINATTR SpiceOrder 3
+PIN -64 -32 LEFT 8
+PINATTR PinName e_bit3
+PINATTR SpiceOrder 4
+PIN -64 0 LEFT 8
+PINATTR PinName e_bit4
+PINATTR SpiceOrder 5
+PIN -64 -160 LEFT 8
+PINATTR PinName Vdd
+PINATTR SpiceOrder 6
+PIN -64 32 LEFT 8
+PINATTR PinName Xk_bit0
+PINATTR SpiceOrder 7
+PIN -64 64 LEFT 8
+PINATTR PinName Xk_bit1
+PINATTR SpiceOrder 8
+PIN -64 96 LEFT 8
+PINATTR PinName Xk_bit2
+PINATTR SpiceOrder 9
+PIN -64 128 LEFT 8
+PINATTR PinName Xk_bit3
+PINATTR SpiceOrder 10
+PIN -64 160 LEFT 8
+PINATTR PinName Xk_bit4
+PINATTR SpiceOrder 11
