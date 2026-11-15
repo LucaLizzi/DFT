@@ -17,7 +17,7 @@ def rsdft(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_bits
     if hw_err:
         rng = np.random.default_rng()
         k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
-    arg = 2 * np.pi * k_vec / N
+    arg = - 2 * np.pi * k_vec / N
 
     # check of the constant
     v = [1.0]
@@ -67,7 +67,7 @@ def rsdft_dc(input_data:None, N:10, sample_rate:int=1, quant_en:bool=True, num_b
     if hw_err:
         rng = np.random.default_rng()
         k_vec = k_vec + rng.uniform(low=LOW_ERR, high=HIGH_ERR, size=N)
-    arg = 2 * np.pi * k_vec / N
+    arg = -2 * np.pi * k_vec / N
 
     # check of the constant
     v = [1.0]
